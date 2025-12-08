@@ -69,29 +69,37 @@ For a complete example, see the [MPRIS client](https://github.com/dbusjs/node-db
 
 ## The Service Interface
 
-You can use the `Interface` class to define your interfaces. This interfaces uses the proposed [decorators syntax](https://github.com/tc39/proposal-decorators) which is not yet part of the ECMAScript standard, but should be included one day. Unfortunately, you'll need a [Babel plugin](https://www.npmjs.com/package/@babel/plugin-proposal-decorators) to make this code work for now.
+You can use the `Interface` class to define your interfaces. Use the `configureMembers()` static method to define the DBus methods, properties, and signals for your interface.
 
 ```js
 let dbus = require('dbus-next');
 let Variant = dbus.Variant;
 
 let {
-  Interface, property, method, signal, DBusError,
+  Interface, DBusError,
   ACCESS_READ, ACCESS_WRITE, ACCESS_READWRITE
 } = dbus.interface;
 
 let bus = dbus.sessionBus();
 
 class ExampleInterface extends Interface {
-  @property({signature: 's', access: ACCESS_READWRITE})
-  SimpleProperty = 'foo';
+  constructor() {
+    super('org.test.iface');
+    this._SimpleProperty = 'foo';
+    this._MapProperty = {
+      'foo': new Variant('s', 'bar'),
+      'bat': new Variant('i', 53)
+    };
+  }
 
-  _MapProperty = {
-    'foo': new Variant('s', 'bar'),
-    'bat': new Variant('i', 53)
-  };
+  get SimpleProperty() {
+    return this._SimpleProperty;
+  }
 
-  @property({signature: 'a{sv}'})
+  set SimpleProperty(value) {
+    this._SimpleProperty = value;
+  }
+
   get MapProperty() {
     return this._MapProperty;
   }
@@ -104,12 +112,10 @@ class ExampleInterface extends Interface {
     });
   }
 
-  @method({inSignature: 's', outSignature: 's'})
   Echo(what) {
     return what;
   }
 
-  @method({inSignature: 'ss', outSignature: 'vv'})
   ReturnsMultiple(what, what2) {
     return [
       new Variant('s', what),
@@ -117,24 +123,20 @@ class ExampleInterface extends Interface {
     ];
   }
 
-  @method({inSignature: '', outSignature: ''})
   ThrowsError() {
     // the error is returned to the client
     throw new DBusError('org.test.iface.Error', 'something went wrong');
   }
 
-  @method({inSignature: '', outSignature: '', noReply: true})
   NoReply() {
-    // by setting noReply to true, dbus-next will NOT send a return reply through dbus 
-    // after the method is called.
+    // by setting noReply to true in configureMembers, dbus-next will NOT send
+    // a return reply through dbus after the method is called.
   }
 
-  @signal({signature: 's'})
   HelloWorld(value) {
     return value;
   }
 
-  @signal({signature: 'ss'})
   SignalMultiple(x) {
     return [
       'hello',
@@ -143,7 +145,46 @@ class ExampleInterface extends Interface {
   }
 }
 
-let example = new ExampleInterface('org.test.iface');
+ExampleInterface.configureMembers({
+  properties: {
+    SimpleProperty: {
+      signature: 's',
+      access: ACCESS_READWRITE
+    },
+    MapProperty: {
+      signature: 'a{sv}'
+    }
+  },
+  methods: {
+    Echo: {
+      inSignature: 's',
+      outSignature: 's'
+    },
+    ReturnsMultiple: {
+      inSignature: 'ss',
+      outSignature: 'vv'
+    },
+    ThrowsError: {
+      inSignature: '',
+      outSignature: ''
+    },
+    NoReply: {
+      inSignature: '',
+      outSignature: '',
+      noReply: true
+    }
+  },
+  signals: {
+    HelloWorld: {
+      signature: 's'
+    },
+    SignalMultiple: {
+      signature: 'ss'
+    }
+  }
+});
+
+let example = new ExampleInterface();
 
 setTimeout(() => {
   // emit the HelloWorld signal by calling the method with the parameters to
@@ -163,11 +204,11 @@ main().catch((err) => {
 });
 ```
 
-Interfaces extend the `Interface` class. Declare service methods, properties, and signals with the decorators provided from the library. You can optionally request a name on the bus with `bus.requestName()` so clients have a well-known name to connect to. Then call `bus.export()` with the path and interface to expose this interface on the bus.
+Interfaces extend the `Interface` class. Use `configureMembers()` to declare the DBus signature for your methods, properties, and signals. You can optionally request a name on the bus with `bus.requestName()` so clients have a well-known name to connect to. Then call `bus.export()` with the path and interface to expose this interface on the bus.
 
 Methods are called when a DBus client calls that method on the server. Properties can be gotten and set with the `org.freedesktop.DBus.Properties` interface and are included in the introspection xml.
 
-To emit a signal, just call the method marked with the `signal` decorator and the signal will be emitted with the returned value.
+To emit a signal, just call the method that is configured as a signal and the signal will be emitted with the returned value.
 
 If you have an interface xml description, which can be gotten from the `org.freedesktop.DBus.Introspect` method on an exported interface, you can generate dbus-next JavaScript classes from the xml file with the `bin/generate-interfaces.js` utility.
 
