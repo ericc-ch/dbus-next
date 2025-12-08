@@ -7,8 +7,7 @@ const DBusError = dbus.DBusError;
 const Message = dbus.Message;
 
 const {
-    Interface, property,
-    method, signal,
+    Interface,
     ACCESS_READ, ACCESS_WRITE
 } = dbus.interface;
 
@@ -87,27 +86,22 @@ class TestInterface extends Interface {
         this.fds = [];
     }
 
-    @method({ outSignature: "h" })
     returnsFd() {
         return this.createFd();
     }
 
-    @method({ inSignature: "h" })
     acceptsFd(fd) {
         this.fds.push(fd);
     }
 
-    @property({ signature: 'h', access: ACCESS_READ })
     get getFdProp() {
         return this.getLastFd();
     }
 
-    @property({ signature: 'h', access: ACCESS_WRITE })
     set setFdProp(fd) {
         this.fds.push(fd);
     }
 
-    @signal({ signature: 'h' })
     signalFd(fd) {
         return fd;
     }
@@ -116,7 +110,6 @@ class TestInterface extends Interface {
         return this.fds[this.fds.length - 1];
     }
 
-    @method({})
     async emitSignal() {
         const fd = await this.createFd();
         await this.signalFd(fd);
@@ -135,6 +128,21 @@ class TestInterface extends Interface {
         }
     }
 }
+
+TestInterface.configureMembers({
+    methods: {
+        returnsFd: { outSignature: "h" },
+        acceptsFd: { inSignature: "h" },
+        emitSignal: {}
+    },
+    properties: {
+        getFdProp: { signature: 'h', access: ACCESS_READ },
+        setFdProp: { signature: 'h', access: ACCESS_WRITE }
+    },
+    signals: {
+        signalFd: { signature: 'h' }
+    }
+});
 
 const testIface = new TestInterface(TEST_IFACE);
 
