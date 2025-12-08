@@ -126,13 +126,21 @@ test('that methods work correctly', async () => {
   expect(r2).toEqual(testIface.complicated2);
 
   let req = test.ThrowsError();
-  await expect(req).rejects.toEqual(testIface.expectedError());
+  await expect(req).rejects.toBeInstanceOf(DBusError);
+  await expect(req).rejects.toMatchObject({
+    type: testIface.expectedError().type,
+    text: testIface.expectedError().text
+  });
 
   req = await test.AsyncEcho('what');
   expect(req).toEqual('what');
 
   req = test.AsyncError();
-  await expect(req).rejects.toEqual(testIface.expectedError());
+  await expect(req).rejects.toBeInstanceOf(DBusError);
+  await expect(req).rejects.toMatchObject({
+    type: testIface.expectedError().type,
+    text: testIface.expectedError().text
+  });
 });
 
 test('client method errors', async () => {

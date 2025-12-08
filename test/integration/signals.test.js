@@ -276,8 +276,8 @@ test('bug #86: signals dont get lost when no previous method calls have been mad
   // don't call EmitSignals through the proxy object
   testIface.EmitSignals();
 
-  // allow signal handlers to run
-  await new Promise(resolve => { setTimeout(resolve, 0); });
+  // allow signal handlers to run (needs more time in bun)
+  await new Promise(resolve => { setTimeout(resolve, 50); });
 
   expect(cb).toHaveBeenCalledTimes(3);
 });
@@ -302,15 +302,32 @@ test('client continues receive signals from restarted DBus service', async () =>
 
   expect(cb).toHaveBeenCalledTimes(3);
 
+  // Set up listener before disconnecting to avoid race condition
+  const waitForDisconnect = waitForMessage(clientBus, { member: 'NameOwnerChanged' });
+
   await testBus.releaseName(testServiceName);
   testBus.disconnect();
 
-  await waitForMessage(clientBus, { member: 'NameOwnerChanged' });
+  await waitForDisconnect;
   expect(clientBus._nameOwners[testServiceName]).toEqual('');
 
   [testBus] = await createTestService(testServiceName);
 
-  await waitForMessage(clientBus, { member: 'NameOwnerChanged' });
+  // Wait for the name owner to be updated by polling
+  // This is more reliable than waiting for signals which can have race conditions
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Timeout waiting for name owner update')), 5000);
+    const check = () => {
+      if (clientBus._nameOwners[testServiceName] === testBus.name) {
+        clearTimeout(timeout);
+        resolve();
+      } else {
+        setTimeout(check, 10);
+      }
+    };
+    check();
+  });
+
   expect(clientBus._nameOwners[testServiceName]).toEqual(testBus.name);
 
   await test.EmitSignals();

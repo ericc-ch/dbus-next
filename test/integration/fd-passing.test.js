@@ -32,10 +32,11 @@ bus.on('error', (err) => {
 });
 
 // make sure unix fds are supported by the bus
-if (!bus._connection.stream.supportsUnixFd) {
+const supportsUnixFd = bus._connection.stream.supportsUnixFd;
+if (!supportsUnixFd) {
     console.log("UNIX_FD not supported");
-    test = test.skip
 }
+const testFn = supportsUnixFd ? test : test.skip;
 
 const bus2 = dbus.sessionBus({negotiateUnixFd: true});
 bus2.on('error', (err) => {
@@ -160,7 +161,7 @@ afterAll(() => {
     bus2.disconnect();
 });
 
-test('sending file descriptor', async () => {
+testFn('sending file descriptor', async () => {
     const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
     const test = object.getInterface(TEST_IFACE);
     expect(test).toBeDefined();
@@ -174,7 +175,7 @@ test('sending file descriptor', async () => {
 });
 
 
-test('receiving file descriptor', async () => {
+testFn('receiving file descriptor', async () => {
     const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
     const test = object.getInterface(TEST_IFACE);
     expect(test).toBeDefined();
@@ -186,7 +187,7 @@ test('receiving file descriptor', async () => {
     await closeFd(fd);
 });
 
-test('get file descriptor property', async () => {
+testFn('get file descriptor property', async () => {
     const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
     const properties = object.getInterface('org.freedesktop.DBus.Properties');
     expect(properties).toBeDefined();
@@ -200,7 +201,7 @@ test('get file descriptor property', async () => {
     await closeFd(fdVariant.value);
 });
 
-test('set file descriptor property', async () => {
+testFn('set file descriptor property', async () => {
     const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
     const properties = object.getInterface('org.freedesktop.DBus.Properties');
     expect(properties).toBeDefined();
@@ -213,7 +214,7 @@ test('set file descriptor property', async () => {
     await closeFd(fd);
 });
 
-test('signal file descriptor', async () => {
+testFn('signal file descriptor', async () => {
     const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
     const test = object.getInterface(TEST_IFACE);
     expect(test).toBeDefined();
@@ -231,7 +232,7 @@ test('signal file descriptor', async () => {
 });
 
 
-test('low level file descriptor sending', async () => {
+testFn('low level file descriptor sending', async () => {
     const fd = await openFd();
     const msg = new Message({
         destination: bus.name,
@@ -277,7 +278,7 @@ test('low level file descriptor sending', async () => {
 });
 
 
-test('low level file descriptor receiving', async () => {
+testFn('low level file descriptor receiving', async () => {
     const fd = await openFd();
     const msg = new Message({
         destination: bus.name,
