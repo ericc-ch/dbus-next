@@ -5,7 +5,7 @@ const Variant = dbus.Variant;
 const DBusError = dbus.DBusError;
 
 const {
-  Interface, property,
+  Interface,
   ACCESS_READ, ACCESS_WRITE
 } = dbus.interface;
 
@@ -20,7 +20,6 @@ bus.on('error', (err) => {
 });
 
 class UserErrorInterface extends Interface {
-  @property({ signature: 's' })
   get UserErrorProperty () {
     throw new DBusError(`${TEST_IFACE}.UserError`, 'user error');
   }
@@ -30,14 +29,17 @@ class UserErrorInterface extends Interface {
   }
 }
 
+UserErrorInterface.configureMembers({
+  properties: {
+    UserErrorProperty: { signature: 's' }
+  }
+});
+
 class TestInterface extends Interface {
-  @property({ signature: 's' })
   SimpleProperty = 'foo';
 
-  @property({ signature: 'v' })
   VariantProperty = new Variant('s', 'foo');
 
-  @property({ signature: '(a{sv}sv)' })
   ComplicatedProperty = [
     {
       foo: new Variant('s', 'bar'),
@@ -49,7 +51,6 @@ class TestInterface extends Interface {
 
   _NotifyingProperty = 'foo';
 
-  @property({ signature: 's' })
   get NotifyingProperty () {
     return this._NotifyingProperty;
   }
@@ -61,12 +62,21 @@ class TestInterface extends Interface {
     }, ['invalid']);
   }
 
-  @property({ signature: 's', access: ACCESS_READ })
   ReadOnly = 'only read';
 
-  @property({ signature: 's', access: ACCESS_WRITE })
   WriteOnly = 'only write';
 }
+
+TestInterface.configureMembers({
+  properties: {
+    SimpleProperty: { signature: 's' },
+    VariantProperty: { signature: 'v' },
+    ComplicatedProperty: { signature: '(a{sv}sv)' },
+    NotifyingProperty: { signature: 's' },
+    ReadOnly: { signature: 's', access: ACCESS_READ },
+    WriteOnly: { signature: 's', access: ACCESS_WRITE }
+  }
+});
 
 const testIface = new TestInterface(TEST_IFACE);
 const userErrorIface = new UserErrorInterface(USER_ERROR_IFACE);
