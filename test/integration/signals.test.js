@@ -6,7 +6,7 @@ const { waitForMessage } = require('../util');
 const Variant = dbus.Variant;
 
 const {
-  Interface, method, signal
+  Interface
 } = dbus.interface;
 
 const TEST_NAME = 'org.test.signals';
@@ -74,12 +74,10 @@ bus2.on('error', (err) => {
 });
 
 class SignalsInterface extends Interface {
-  @signal({ signature: 's' })
   HelloWorld (value) {
     return value;
   }
 
-  @signal({ signature: 'ss' })
   SignalMultiple () {
     return [
       'hello',
@@ -108,18 +106,27 @@ class SignalsInterface extends Interface {
     ])
   });
 
-  @signal({ signature: 'v' })
   SignalComplicated () {
     return this.complicated;
   }
 
-  @method({ inSignature: '', outSignature: '' })
   EmitSignals () {
     this.HelloWorld('hello');
     this.SignalMultiple();
     this.SignalComplicated();
   }
 }
+
+SignalsInterface.configureMembers({
+  methods: {
+    EmitSignals: { inSignature: '', outSignature: '' }
+  },
+  signals: {
+    HelloWorld: { signature: 's' },
+    SignalMultiple: { signature: 'ss' },
+    SignalComplicated: { signature: 'v' }
+  }
+});
 
 const testIface = new SignalsInterface(TEST_IFACE);
 const testIface2 = new SignalsInterface(TEST_IFACE);
