@@ -5,7 +5,7 @@ const Variant = dbus.Variant;
 const DBusError = dbus.DBusError;
 
 const {
-  Interface, property, method, signal
+  Interface
 } = dbus.interface;
 
 const TEST_NAME = 'org.test.service_options';
@@ -18,36 +18,45 @@ bus.on('error', (err) => {
 });
 
 class OptionsTestInterface extends Interface {
-  @method({ disabled: true })
   DisabledMethod () {
   }
 
-  @method({ name: 'SomeMethod', inSignature: 's', outSignature: 's' })
   methodNamedDifferently (what) {
     return what;
   }
 
-  @signal({ name: 'RenamedSignal', signature: 's' })
   signalNamedDifferently (what) {
     return what;
   }
 
-  @method({})
   EmitRenamedSignal () {
     this.signalNamedDifferently('hello');
   }
 
-  @signal({ disabled: true, outSignature: 'd' })
   DisabledSignal (what) {
     return what;
   }
 
-  @property({ name: 'SomeProperty', signature: 's' })
   propertyNamedDifferently = 'SomeProperty';
 
-  @property({ disabled: true, signature: 's' })
   DisabledProperty = 'DisabledProperty';
 }
+
+OptionsTestInterface.configureMembers({
+  methods: {
+    DisabledMethod: { disabled: true },
+    methodNamedDifferently: { name: 'SomeMethod', inSignature: 's', outSignature: 's' },
+    EmitRenamedSignal: {}
+  },
+  signals: {
+    signalNamedDifferently: { name: 'RenamedSignal', signature: 's' },
+    DisabledSignal: { disabled: true, signature: 'd' }
+  },
+  properties: {
+    propertyNamedDifferently: { name: 'SomeProperty', signature: 's' },
+    DisabledProperty: { disabled: true, signature: 's' }
+  }
+});
 
 const testIface = new OptionsTestInterface(TEST_IFACE);
 
