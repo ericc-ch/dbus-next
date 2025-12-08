@@ -9,4 +9,4 @@ RUN bun install
 
 COPY . .
 
-CMD ["dbus-run-session", "--", "bunx", "jest"]
+CMD ["dbus-run-session", "--", "bun", "test"]
