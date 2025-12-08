@@ -2,7 +2,7 @@ const dbus = require('../../');
 const { ping } = require('../util');
 
 const {
-  Interface, method, signal
+  Interface
 } = dbus.interface;
 
 const TEST_NAME = 'org.test.disconnect';
@@ -15,15 +15,22 @@ bus.on('error', (err) => {
 });
 
 class TestInterface extends Interface {
-  @method({ inSignature: 's', outSignature: 's' })
   Echo (what) {
     return what;
   }
 
-  @signal({})
   SomeSignal () {
   }
 }
+
+TestInterface.configureMembers({
+  methods: {
+    Echo: { inSignature: 's', outSignature: 's' }
+  },
+  signals: {
+    SomeSignal: {}
+  }
+});
 
 const testIface = new TestInterface(TEST_IFACE);
 
