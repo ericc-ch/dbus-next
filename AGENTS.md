@@ -18,3 +18,10 @@
 - **Errors**: Use DBusError class for DBus errors; validator functions (assertBusNameValid, etc.)
 - **Naming**: camelCase for variables/functions, PascalCase for classes, UPPER_SNAKE for constants
 - **Decorators**: @method, @property, @signal for service interfaces (requires Babel)
+
+## Commit Guidelines
+- Break large changes into multiple small, focused commits
+- Use conventional commits: `type: concise message`
+- All lowercase, no period at end
+- No commit body unless absolutely necessary
+- Types: feat, fix, refactor, docs, test, chore, style
