@@ -5,7 +5,7 @@ const Variant = dbus.Variant;
 const DBusError = dbus.DBusError;
 
 const {
-  Interface, method
+  Interface
 } = dbus.interface;
 
 const TEST_NAME = 'org.test.methods';
@@ -22,17 +22,14 @@ class MethodsInterface extends Interface {
     return new DBusError('org.test.iface.Error', 'something went wrong');
   }
 
-  @method({ inSignature: 'v', outSignature: 'v' })
   Echo (what) {
     return what;
   }
 
-  @method({ inSignature: 'vv', outSignature: 'vv' })
   EchoMultiple (what, what2) {
     return [what, what2];
   }
 
-  @method({ inSignature: '', outSignature: '' })
   ThrowsError () {
     throw this.expectedError();
   }
@@ -52,25 +49,33 @@ class MethodsInterface extends Interface {
 
   complicated2 = ['one', 'two']
 
-  @method({ inSignature: '', outSignature: 'av(ss)' })
   ReturnsComplicated () {
     return [this.complicated1, this.complicated2];
   }
 
-  @method({ inSignature: 'as', outSignature: '' })
   TakesList () {
   }
 
-  @method({ inSignature: 's', outSignature: 's' })
   async AsyncEcho (what) {
     return what;
   }
 
-  @method({ inSignature: '', outSignature: '' })
   async AsyncError () {
     throw this.expectedError();
   }
 }
+
+MethodsInterface.configureMembers({
+  methods: {
+    Echo: { inSignature: 'v', outSignature: 'v' },
+    EchoMultiple: { inSignature: 'vv', outSignature: 'vv' },
+    ThrowsError: { inSignature: '', outSignature: '' },
+    ReturnsComplicated: { inSignature: '', outSignature: 'av(ss)' },
+    TakesList: { inSignature: 'as', outSignature: '' },
+    AsyncEcho: { inSignature: 's', outSignature: 's' },
+    AsyncError: { inSignature: '', outSignature: '' }
+  }
+});
 
 const testIface = new MethodsInterface(TEST_IFACE);
 
