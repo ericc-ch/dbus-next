@@ -11,7 +11,7 @@ const dbus = require('../../');
 const DBusError = dbus.DBusError;
 
 const {
-  Interface, method
+  Interface
 } = dbus.interface;
 
 const {
@@ -29,7 +29,6 @@ bus.on('error', (err) => {
 });
 
 class LongInterface extends Interface {
-  @method({ inSignature: 'x', outSignature: 'x' })
   EchoSigned (what) {
     if (typeof what !== 'bigint') {
       throw new DBusError(TEST_ERROR_PATH, 'interface with long expected a BigInt for type x');
@@ -37,7 +36,6 @@ class LongInterface extends Interface {
     return what;
   }
 
-  @method({ inSignature: 't', outSignature: 't' })
   EchoUnsigned (what) {
     if (typeof what !== 'bigint') {
       throw new DBusError(TEST_ERROR_PATH, 'interface with long expected a BigInt for type t');
@@ -45,6 +43,13 @@ class LongInterface extends Interface {
     return what;
   }
 }
+
+LongInterface.configureMembers({
+  methods: {
+    EchoSigned: { inSignature: 'x', outSignature: 'x' },
+    EchoUnsigned: { inSignature: 't', outSignature: 't' }
+  }
+});
 
 const testIface = new LongInterface(TEST_IFACE);
 
