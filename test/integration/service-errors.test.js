@@ -5,7 +5,7 @@ const Variant = dbus.Variant;
 const DBusError = dbus.DBusError;
 
 const {
-  Interface, property, method
+  Interface
 } = dbus.interface;
 
 const TEST_NAME = 'org.test.service_errors';
@@ -18,7 +18,6 @@ bus.on('error', (err) => {
 });
 
 class ErroringInterface extends Interface {
-  @property({ signature: 's' })
   get ErrorProperty () {
     throw new Error('something went wrong');
   }
@@ -27,19 +26,27 @@ class ErroringInterface extends Interface {
     throw new Error('something went wrong');
   }
 
-  @property({ signature: 's' })
   WrongType = 55;
 
-  @method({})
   ErrorMethod () {
     throw new Error('something went wrong');
   }
 
-  @method({})
   WrongReturn () {
     return ['foo', 'bar'];
   }
 }
+
+ErroringInterface.configureMembers({
+  properties: {
+    ErrorProperty: { signature: 's' },
+    WrongType: { signature: 's' }
+  },
+  methods: {
+    ErrorMethod: {},
+    WrongReturn: {}
+  }
+});
 
 const testIface = new ErroringInterface(TEST_IFACE);
 
