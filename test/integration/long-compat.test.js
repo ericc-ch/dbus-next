@@ -6,7 +6,7 @@ const dbus = require('../../');
 dbus.setBigIntCompat(true);
 
 const {
-  Interface, method, DBusError
+  Interface, DBusError
 } = dbus.interface;
 
 const {
@@ -24,7 +24,6 @@ bus.on('error', (err) => {
 });
 
 class LongInterface extends Interface {
-  @method({ inSignature: 'x', outSignature: 'x' })
   EchoSigned (what) {
     if (what.prototype !== JSBI.BigInt.prototype) {
       throw new DBusError(TEST_ERROR_PATH, 'interface with long compat expected a JSBI BigInt for type x');
@@ -32,7 +31,6 @@ class LongInterface extends Interface {
     return what;
   }
 
-  @method({ inSignature: 't', outSignature: 't' })
   EchoUnsigned (what) {
     if (what.prototype !== JSBI.BigInt.prototype) {
       throw new DBusError(TEST_ERROR_PATH, 'interface with long compat expected a JSBI BigInt for type t');
@@ -40,6 +38,13 @@ class LongInterface extends Interface {
     return what;
   }
 }
+
+LongInterface.configureMembers({
+  methods: {
+    EchoSigned: { inSignature: 'x', outSignature: 'x' },
+    EchoUnsigned: { inSignature: 't', outSignature: 't' }
+  }
+});
 
 const testIface = new LongInterface(TEST_IFACE);
 
