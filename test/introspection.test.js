@@ -1,69 +1,76 @@
 const dbus = require('../');
 
 const {
-  Interface, property, method, signal, ACCESS_READ
+  Interface, ACCESS_READ
 } = dbus.interface;
 
 const TEST_IFACE = 'org.test.iface';
 
 class IntrospectionTestInterface extends Interface {
-  @method({ disabled: true })
   DisabledMethod () {
   }
 
-  @method({})
   NopMethod () {
   }
 
-  @method({ name: 'RenamedMethod', inSignature: 'd', outSignature: 'd' })
   myRenamedMethod (what) {
     return 53;
   }
 
-  @method({ inSignature: 'sd', outSignature: 'sd' })
   SomeMethod (str, d) {
     return [str, d];
   }
 
-  @method({ inSignature: '', outSignature: '', noReply: true })
   NoReplyMethod () {
 
   }
 
-  @method({ name: 'Overloaded', inSignature: 's', outSignature: 's' })
   overloaded1 (str) {
     return str;
   }
 
-  @method({ name: 'Overloaded', inSignature: 'd', outSignature: 'd' })
   overloaded2 (what) {
     return what;
   }
 
-  @signal({ name: 'RenamedSignal', signature: 's' })
   signalNamedDifferently (what) {
     return what;
   }
 
-  @signal({ disabled: true, signature: 'd' })
   DisabledSignal (what) {
     return what;
   }
 
-  @signal({ signature: 'os' })
   SomeSignal () {
     return '/foo/bar';
   }
 
-  @property({ signature: 'd', access: ACCESS_READ })
   SomeProperty = 'foo';
-
-  @property({ name: 'RenamedProperty', signature: 's' })
   propertyNamedDifferently = 'RenamedProperty';
-
-  @property({ disabled: true, signature: 's' })
   DisabledProperty = 'DisabledProperty';
 }
+
+IntrospectionTestInterface.configureMembers({
+  methods: {
+    DisabledMethod: { disabled: true },
+    NopMethod: {},
+    myRenamedMethod: { name: 'RenamedMethod', inSignature: 'd', outSignature: 'd' },
+    SomeMethod: { inSignature: 'sd', outSignature: 'sd' },
+    NoReplyMethod: { inSignature: '', outSignature: '', noReply: true },
+    overloaded1: { name: 'Overloaded', inSignature: 's', outSignature: 's' },
+    overloaded2: { name: 'Overloaded', inSignature: 'd', outSignature: 'd' }
+  },
+  signals: {
+    signalNamedDifferently: { name: 'RenamedSignal', signature: 's' },
+    DisabledSignal: { disabled: true, signature: 'd' },
+    SomeSignal: { signature: 'os' }
+  },
+  properties: {
+    SomeProperty: { signature: 'd', access: ACCESS_READ },
+    propertyNamedDifferently: { name: 'RenamedProperty', signature: 's' },
+    DisabledProperty: { disabled: true, signature: 's' }
+  }
+});
 
 const testIface = new IntrospectionTestInterface(TEST_IFACE);
 
