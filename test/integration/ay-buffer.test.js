@@ -2,7 +2,7 @@ const dbus = require('../../');
 
 const Variant = dbus.Variant;
 const {
-  Interface, method
+  Interface
 } = dbus.interface;
 
 const bus = dbus.sessionBus();
@@ -24,13 +24,11 @@ const TEST_PATH = '/org/test/path';
 const TEST_IFACE = 'org.test.iface';
 
 class AyBufferInterface extends Interface {
-  @method({ inSignature: 'ay', outSignature: 'ay' })
   EchoBuffer (what) {
     expect(what).toEqual(expect.any(Buffer));
     return what;
   }
 
-  @method({ inSignature: 'aay', outSignature: 'aay' })
   EchoAay (what) {
     expect(what).toEqual(expect.any(Array));
     for (const buf of what) {
@@ -39,13 +37,20 @@ class AyBufferInterface extends Interface {
     return what;
   }
 
-  @method({ inSignature: 'v', outSignature: 'v' })
   EchoAyVariant (what) {
     expect(what.signature).toEqual('ay');
     expect(what.value).toEqual(expect.any(Buffer));
     return what;
   }
 }
+
+AyBufferInterface.configureMembers({
+  methods: {
+    EchoBuffer: { inSignature: 'ay', outSignature: 'ay' },
+    EchoAay: { inSignature: 'aay', outSignature: 'aay' },
+    EchoAyVariant: { inSignature: 'v', outSignature: 'v' }
+  }
+});
 
 const testIface = new AyBufferInterface(TEST_IFACE);
 
