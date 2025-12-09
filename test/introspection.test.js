@@ -1,156 +1,156 @@
-const dbus = require('../');
+const dbus = require("../")
 
-const {
-  Interface, ACCESS_READ
-} = dbus.interface;
+const { Interface, ACCESS_READ } = dbus.interface
 
-const TEST_IFACE = 'org.test.iface';
+const TEST_IFACE = "org.test.iface"
 
 class IntrospectionTestInterface extends Interface {
-  DisabledMethod () {
+  DisabledMethod() {}
+
+  NopMethod() {}
+
+  myRenamedMethod(what) {
+    return 53
   }
 
-  NopMethod () {
+  SomeMethod(str, d) {
+    return [str, d]
   }
 
-  myRenamedMethod (what) {
-    return 53;
+  NoReplyMethod() {}
+
+  overloaded1(str) {
+    return str
   }
 
-  SomeMethod (str, d) {
-    return [str, d];
+  overloaded2(what) {
+    return what
   }
 
-  NoReplyMethod () {
-
+  signalNamedDifferently(what) {
+    return what
   }
 
-  overloaded1 (str) {
-    return str;
+  DisabledSignal(what) {
+    return what
   }
 
-  overloaded2 (what) {
-    return what;
+  SomeSignal() {
+    return "/foo/bar"
   }
 
-  signalNamedDifferently (what) {
-    return what;
-  }
-
-  DisabledSignal (what) {
-    return what;
-  }
-
-  SomeSignal () {
-    return '/foo/bar';
-  }
-
-  SomeProperty = 'foo';
-  propertyNamedDifferently = 'RenamedProperty';
-  DisabledProperty = 'DisabledProperty';
+  SomeProperty = "foo"
+  propertyNamedDifferently = "RenamedProperty"
+  DisabledProperty = "DisabledProperty"
 }
 
 IntrospectionTestInterface.configureMembers({
   methods: {
     DisabledMethod: { disabled: true },
     NopMethod: {},
-    myRenamedMethod: { name: 'RenamedMethod', inSignature: 'd', outSignature: 'd' },
-    SomeMethod: { inSignature: 'sd', outSignature: 'sd' },
-    NoReplyMethod: { inSignature: '', outSignature: '', noReply: true },
-    overloaded1: { name: 'Overloaded', inSignature: 's', outSignature: 's' },
-    overloaded2: { name: 'Overloaded', inSignature: 'd', outSignature: 'd' }
+    myRenamedMethod: {
+      name: "RenamedMethod",
+      inSignature: "d",
+      outSignature: "d",
+    },
+    SomeMethod: { inSignature: "sd", outSignature: "sd" },
+    NoReplyMethod: { inSignature: "", outSignature: "", noReply: true },
+    overloaded1: { name: "Overloaded", inSignature: "s", outSignature: "s" },
+    overloaded2: { name: "Overloaded", inSignature: "d", outSignature: "d" },
   },
   signals: {
-    signalNamedDifferently: { name: 'RenamedSignal', signature: 's' },
-    DisabledSignal: { disabled: true, signature: 'd' },
-    SomeSignal: { signature: 'os' }
+    signalNamedDifferently: { name: "RenamedSignal", signature: "s" },
+    DisabledSignal: { disabled: true, signature: "d" },
+    SomeSignal: { signature: "os" },
   },
   properties: {
-    SomeProperty: { signature: 'd', access: ACCESS_READ },
-    propertyNamedDifferently: { name: 'RenamedProperty', signature: 's' },
-    DisabledProperty: { disabled: true, signature: 's' }
-  }
-});
+    SomeProperty: { signature: "d", access: ACCESS_READ },
+    propertyNamedDifferently: { name: "RenamedProperty", signature: "s" },
+    DisabledProperty: { disabled: true, signature: "s" },
+  },
+})
 
-const testIface = new IntrospectionTestInterface(TEST_IFACE);
+const testIface = new IntrospectionTestInterface(TEST_IFACE)
 
-test('property xml introspection', () => {
+test("property xml introspection", () => {
   const getProperty = (name) => {
-    const properties = testIface.$introspect().property;
+    const properties = testIface.$introspect().property
     return properties.find((p) => {
-      return p.$.name === name;
-    });
-  };
+      return p.$.name === name
+    })
+  }
 
-  let property = getProperty('SomeProperty');
-  expect(property).toBeDefined();
-  expect(property.$).toBeDefined();
-  expect(property.$.type).toEqual('d');
-  expect(property.$.access).toEqual('read');
+  let property = getProperty("SomeProperty")
+  expect(property).toBeDefined()
+  expect(property.$).toBeDefined()
+  expect(property.$.type).toEqual("d")
+  expect(property.$.access).toEqual("read")
 
-  expect(getProperty('propertyNamedDifferently')).not.toBeDefined();
-  expect(getProperty('DisabledProperty')).not.toBeDefined();
+  expect(getProperty("propertyNamedDifferently")).not.toBeDefined()
+  expect(getProperty("DisabledProperty")).not.toBeDefined()
 
-  property = getProperty('RenamedProperty');
-  expect(property).toBeDefined();
-  expect(property.$).toBeDefined();
-  expect(property.$.type).toEqual('s');
-  expect(property.$.access).toEqual('readwrite');
-});
+  property = getProperty("RenamedProperty")
+  expect(property).toBeDefined()
+  expect(property.$).toBeDefined()
+  expect(property.$.type).toEqual("s")
+  expect(property.$.access).toEqual("readwrite")
+})
 
-test('method xml introspection', () => {
+test("method xml introspection", () => {
   const getMethod = (name) => {
-    const methods = testIface.$introspect().method;
+    const methods = testIface.$introspect().method
     return methods.filter((m) => {
-      return m.$.name === name;
-    });
-  };
+      return m.$.name === name
+    })
+  }
 
-  let method = getMethod('SomeMethod')[0];
-  expect(method).toBeDefined();
-  expect(method.arg).toBeInstanceOf(Array);
-  expect(method.arg.length).toEqual(4);
-  expect(method.arg[0]).toEqual({ $: { direction: 'in', type: 's' } });
-  expect(method.arg[1]).toEqual({ $: { direction: 'in', type: 'd' } });
-  expect(method.arg[2]).toEqual({ $: { direction: 'out', type: 's' } });
-  expect(method.arg[3]).toEqual({ $: { direction: 'out', type: 'd' } });
+  let method = getMethod("SomeMethod")[0]
+  expect(method).toBeDefined()
+  expect(method.arg).toBeInstanceOf(Array)
+  expect(method.arg.length).toEqual(4)
+  expect(method.arg[0]).toEqual({ $: { direction: "in", type: "s" } })
+  expect(method.arg[1]).toEqual({ $: { direction: "in", type: "d" } })
+  expect(method.arg[2]).toEqual({ $: { direction: "out", type: "s" } })
+  expect(method.arg[3]).toEqual({ $: { direction: "out", type: "d" } })
 
-  method = getMethod('RenamedMethod')[0];
-  expect(method).toBeDefined();
+  method = getMethod("RenamedMethod")[0]
+  expect(method).toBeDefined()
 
-  method = getMethod('DisabledMethod')[0];
-  expect(method).not.toBeDefined();
+  method = getMethod("DisabledMethod")[0]
+  expect(method).not.toBeDefined()
 
-  method = getMethod('NoReplyMethod')[0];
-  expect(method).toBeDefined();
-  expect(method.annotation).toBeInstanceOf(Array);
-  expect(method.annotation[0]).toEqual({ $: { name: 'org.freedesktop.DBus.Method.NoReply', value: 'true' } });
+  method = getMethod("NoReplyMethod")[0]
+  expect(method).toBeDefined()
+  expect(method.annotation).toBeInstanceOf(Array)
+  expect(method.annotation[0]).toEqual({
+    $: { name: "org.freedesktop.DBus.Method.NoReply", value: "true" },
+  })
 
-  const overloaded = getMethod('Overloaded');
-  expect(overloaded.length).toEqual(2);
-});
+  const overloaded = getMethod("Overloaded")
+  expect(overloaded.length).toEqual(2)
+})
 
-test('signal xml introspection', () => {
+test("signal xml introspection", () => {
   const getSignal = (name) => {
-    const signals = testIface.$introspect().signal;
+    const signals = testIface.$introspect().signal
     return signals.filter((m) => {
-      return m.$.name === name;
-    });
-  };
+      return m.$.name === name
+    })
+  }
 
-  let signal = getSignal('SomeSignal')[0];
-  expect(signal).toBeDefined();
-  expect(signal.arg).toBeInstanceOf(Array);
-  expect(signal.arg.length).toEqual(2);
-  expect(signal.arg[0]).toEqual({ $: { type: 'o' } });
-  expect(signal.arg[1]).toEqual({ $: { type: 's' } });
+  let signal = getSignal("SomeSignal")[0]
+  expect(signal).toBeDefined()
+  expect(signal.arg).toBeInstanceOf(Array)
+  expect(signal.arg.length).toEqual(2)
+  expect(signal.arg[0]).toEqual({ $: { type: "o" } })
+  expect(signal.arg[1]).toEqual({ $: { type: "s" } })
 
-  signal = getSignal('DisabledSignal')[0];
-  expect(signal).not.toBeDefined();
+  signal = getSignal("DisabledSignal")[0]
+  expect(signal).not.toBeDefined()
 
-  signal = getSignal('signalNamedDifferently')[0];
-  expect(signal).not.toBeDefined();
+  signal = getSignal("signalNamedDifferently")[0]
+  expect(signal).not.toBeDefined()
 
-  signal = getSignal('RenamedSignal');
-  expect(signal).toBeDefined();
-});
+  signal = getSignal("RenamedSignal")
+  expect(signal).toBeDefined()
+})

@@ -1,42 +1,48 @@
 // Test some of the standard dbus interfaces to make sure the client works
 // correctly
 
-const dbus = require('../../');
-const Message = dbus.Message;
-const bus = dbus.sessionBus();
-const { Interface } = dbus.interface;
-const xml2js = require('xml2js');
+const dbus = require("../../")
+const Message = dbus.Message
+const bus = dbus.sessionBus()
+const { Interface } = dbus.interface
+const xml2js = require("xml2js")
 
-bus.on('error', (err) => {
-  console.log(`got unexpected connection error:\n${err.stack}`);
-});
+bus.on("error", (err) => {
+  console.log(`got unexpected connection error:\n${err.stack}`)
+})
 
 afterAll(() => {
-  bus.disconnect();
-});
+  bus.disconnect()
+})
 
-test('lists names on the bus', async () => {
-  const object = await bus.getProxyObject('org.freedesktop.DBus', '/org/freedesktop/DBus');
-  const iface = object.getInterface('org.freedesktop.DBus');
-  expect(iface).toBeDefined();
-  const names = await iface.ListNames();
-  expect(names.length).toBeGreaterThan(0);
-  expect(names).toEqual(expect.arrayContaining(['org.freedesktop.DBus']));
-});
+test("lists names on the bus", async () => {
+  const object = await bus.getProxyObject(
+    "org.freedesktop.DBus",
+    "/org/freedesktop/DBus",
+  )
+  const iface = object.getInterface("org.freedesktop.DBus")
+  expect(iface).toBeDefined()
+  const names = await iface.ListNames()
+  expect(names.length).toBeGreaterThan(0)
+  expect(names).toEqual(expect.arrayContaining(["org.freedesktop.DBus"]))
+})
 
-test('get stats', async () => {
-  const object = await bus.getProxyObject('org.freedesktop.DBus', '/org/freedesktop/DBus');
-  const iface = object.getInterface('org.freedesktop.DBus.Debug.Stats');
-  const stats = await iface.GetStats();
-  expect(stats).toBeInstanceOf(Object);
-  expect(stats).toHaveProperty('BusNames');
-  const busNames = stats.BusNames;
-  expect(busNames).toBeInstanceOf(dbus.Variant);
-  expect(busNames.signature).toBe('u');
-  expect(busNames.value).toBeGreaterThan(0);
-});
+test("get stats", async () => {
+  const object = await bus.getProxyObject(
+    "org.freedesktop.DBus",
+    "/org/freedesktop/DBus",
+  )
+  const iface = object.getInterface("org.freedesktop.DBus.Debug.Stats")
+  const stats = await iface.GetStats()
+  expect(stats).toBeInstanceOf(Object)
+  expect(stats).toHaveProperty("BusNames")
+  const busNames = stats.BusNames
+  expect(busNames).toBeInstanceOf(dbus.Variant)
+  expect(busNames.signature).toBe("u")
+  expect(busNames.value).toBeGreaterThan(0)
+})
 
-test('provided xml', async () => {
+test("provided xml", async () => {
   const xml = `
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
     "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
@@ -67,74 +73,78 @@ test('provided xml', async () => {
     <node name="child_of_sample_object"/>
     <node name="another_child_of_sample_object"/>
 </node>
-`;
-  const object = await bus.getProxyObject('com.example.Sample', '/com/example/sample_object0', xml);
+`
+  const object = await bus.getProxyObject(
+    "com.example.Sample",
+    "/com/example/sample_object0",
+    xml,
+  )
 
-  const iface = object.getInterface('com.example.SampleInterface0');
-  expect(object.nodes.length).toEqual(2);
-  expect(iface.Frobate).toBeDefined();
-  expect(iface.Bazify).toBeDefined();
-  expect(iface.Mogrify).toBeDefined();
-  expect(iface.$signals.find((s) => s.name === 'Changed')).toBeDefined();
-});
+  const iface = object.getInterface("com.example.SampleInterface0")
+  expect(object.nodes.length).toEqual(2)
+  expect(iface.Frobate).toBeDefined()
+  expect(iface.Bazify).toBeDefined()
+  expect(iface.Mogrify).toBeDefined()
+  expect(iface.$signals.find((s) => s.name === "Changed")).toBeDefined()
+})
 
 class Iface extends Interface {
-  constructor () {
-    super('org.test.Interface1');
+  constructor() {
+    super("org.test.Interface1")
   }
 }
 
-test('exported service introspection', async () => {
+test("exported service introspection", async () => {
   // regression: see #62
 
-  const iface1 = new Iface();
-  const iface2 = new Iface();
+  const iface1 = new Iface()
+  const iface2 = new Iface()
 
-  const dest = 'org.test.services';
+  const dest = "org.test.services"
 
-  bus.export('/org/test/path1', iface1);
-  bus.export('/org/test/path2', iface2);
+  bus.export("/org/test/path1", iface1)
+  bus.export("/org/test/path2", iface2)
 
-  await bus.requestName(dest);
+  await bus.requestName(dest)
 
-  const parser = new xml2js.Parser();
+  const parser = new xml2js.Parser()
 
   const introspect = async (path) => {
     const msg = new Message({
       destination: dest,
       path: path,
-      interface: 'org.freedesktop.DBus.Introspectable',
-      member: 'Introspect'
-    });
+      interface: "org.freedesktop.DBus.Introspectable",
+      member: "Introspect",
+    })
 
-    const result = await bus.call(msg);
-    let error, xml;
+    const result = await bus.call(msg)
+    let error, xml
 
     parser.parseString(result.body[0], (e, data) => {
       if (e) {
-        error = e;
-        return;
+        error = e
+        return
       }
-      xml = data;
-    });
+      xml = data
+    })
 
-    expect(error).toBeUndefined();
+    expect(error).toBeUndefined()
 
-    return xml;
-  };
+    return xml
+  }
 
   const validateIntrospection = (introspection, nodeCount) => {
-    expect(introspection.node).toBeDefined();
-    expect(introspection.node.node).toBeDefined();
-    expect(introspection.node.node.length).toBe(nodeCount);
-  };
+    expect(introspection.node).toBeDefined()
+    expect(introspection.node.node).toBeDefined()
+    expect(introspection.node.node.length).toBe(nodeCount)
+  }
 
-  let introspection = await introspect('/');
-  validateIntrospection(introspection, 1);
+  let introspection = await introspect("/")
+  validateIntrospection(introspection, 1)
 
-  introspection = await introspect('/org');
-  validateIntrospection(introspection, 1);
+  introspection = await introspect("/org")
+  validateIntrospection(introspection, 1)
 
-  introspection = await introspect('/org/test');
-  validateIntrospection(introspection, 2);
-});
+  introspection = await introspect("/org/test")
+  validateIntrospection(introspection, 2)
+})

@@ -1,6 +1,7 @@
 # AGENTS.md
 
 ## Build/Test Commands
+
 - `bun test` - Run all tests (requires dbus-run-session wrapper)
 - `bun run unit` - Unit tests only: `bun test ./test/*.test.js`
 - `bun run integration` - Integration tests with DBus session
@@ -9,9 +10,10 @@
 - `docker build -t dbus-next-test . && docker run --rm dbus-next-test` - Run tests in Docker
 
 ## Code Style
+
 - **Linting**: semistandard (standard + semicolons), BigInt global
 - **ESLint**: extends eslint:recommended + prettier; eqeqeq enforced
-- **Modules**: CommonJS (require/module.exports), no ES modules
+- **Modules**: ES modules (import/export) for generated code; existing codebase uses CommonJS
 - **Classes**: JSDoc documentation, class-based architecture with EventEmitter
 - **Async**: Use async/await patterns throughout; Promises for DBus operations
 - **Types**: Variant class for DBus variants; BigInt for int64/uint64 (JSBI polyfill for Node <10.8)
@@ -20,6 +22,7 @@
 - **Service Interfaces**: Use `Interface.configureMembers()` to define methods, properties, and signals
 
 ## Commit Guidelines
+
 - Break large changes into multiple small, focused commits
 - Use conventional commits: `type: concise message`
 - All lowercase, no period at end

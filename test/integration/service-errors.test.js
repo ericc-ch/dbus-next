@@ -1,84 +1,86 @@
 // Test when services throw errors
 
-const dbus = require('../../');
-const Variant = dbus.Variant;
-const DBusError = dbus.DBusError;
+const dbus = require("../../")
+const Variant = dbus.Variant
+const DBusError = dbus.DBusError
 
-const {
-  Interface
-} = dbus.interface;
+const { Interface } = dbus.interface
 
-const TEST_NAME = 'org.test.service_errors';
-const TEST_PATH = '/org/test/path';
-const TEST_IFACE = 'org.test.iface';
+const TEST_NAME = "org.test.service_errors"
+const TEST_PATH = "/org/test/path"
+const TEST_IFACE = "org.test.iface"
 
-const bus = dbus.sessionBus();
-bus.on('error', (err) => {
-  console.log(`got unexpected connection error:\n${err.stack}`);
-});
+const bus = dbus.sessionBus()
+bus.on("error", (err) => {
+  console.log(`got unexpected connection error:\n${err.stack}`)
+})
 
 class ErroringInterface extends Interface {
-  get ErrorProperty () {
-    throw new Error('something went wrong');
+  get ErrorProperty() {
+    throw new Error("something went wrong")
   }
 
-  set ErrorProperty (val) {
-    throw new Error('something went wrong');
+  set ErrorProperty(val) {
+    throw new Error("something went wrong")
   }
 
-  WrongType = 55;
+  WrongType = 55
 
-  ErrorMethod () {
-    throw new Error('something went wrong');
+  ErrorMethod() {
+    throw new Error("something went wrong")
   }
 
-  WrongReturn () {
-    return ['foo', 'bar'];
+  WrongReturn() {
+    return ["foo", "bar"]
   }
 }
 
 ErroringInterface.configureMembers({
   properties: {
-    ErrorProperty: { signature: 's' },
-    WrongType: { signature: 's' }
+    ErrorProperty: { signature: "s" },
+    WrongType: { signature: "s" },
   },
   methods: {
     ErrorMethod: {},
-    WrongReturn: {}
-  }
-});
+    WrongReturn: {},
+  },
+})
 
-const testIface = new ErroringInterface(TEST_IFACE);
+const testIface = new ErroringInterface(TEST_IFACE)
 
 beforeAll(async () => {
-  await bus.requestName(TEST_NAME);
-  bus.export(TEST_PATH, testIface);
-});
+  await bus.requestName(TEST_NAME)
+  bus.export(TEST_PATH, testIface)
+})
 
 afterAll(() => {
-  bus.disconnect();
-});
+  bus.disconnect()
+})
 
-test('when services throw errors they should be returned to the client', async () => {
-  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
-  const properties = object.getInterface('org.freedesktop.DBus.Properties');
-  const iface = object.getInterface(TEST_IFACE);
+test("when services throw errors they should be returned to the client", async () => {
+  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH)
+  const properties = object.getInterface("org.freedesktop.DBus.Properties")
+  const iface = object.getInterface(TEST_IFACE)
 
-  let req = iface.ErrorMethod();
-  await expect(req).rejects.toThrow(DBusError);
+  let req = iface.ErrorMethod()
+  await expect(req).rejects.toThrow(DBusError)
 
-  req = iface.WrongReturn();
-  await expect(req).rejects.toThrow(DBusError);
+  req = iface.WrongReturn()
+  await expect(req).rejects.toThrow(DBusError)
 
-  req = properties.GetAll(TEST_IFACE);
-  await expect(req).rejects.toThrow(DBusError);
+  req = properties.GetAll(TEST_IFACE)
+  await expect(req).rejects.toThrow(DBusError)
 
-  req = properties.Get(TEST_IFACE, 'ErrorProperty');
-  await expect(req).rejects.toThrow(DBusError);
+  req = properties.Get(TEST_IFACE, "ErrorProperty")
+  await expect(req).rejects.toThrow(DBusError)
 
-  req = properties.Get(TEST_IFACE, 'WrongType');
-  await expect(req).rejects.toThrow(DBusError);
+  req = properties.Get(TEST_IFACE, "WrongType")
+  await expect(req).rejects.toThrow(DBusError)
 
-  req = properties.Set(TEST_IFACE, 'ErrorProperty', new Variant('s', 'something'));
-  await expect(req).rejects.toThrow(DBusError);
-});
+  req = properties.Set(
+    TEST_IFACE,
+    "ErrorProperty",
+    new Variant("s", "something"),
+  )
+  await expect(req).rejects.toThrow(DBusError)
+})

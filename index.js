@@ -1,15 +1,15 @@
-const constants = require('./lib/constants');
-const MessageBus = require('./lib/bus');
-const errors = require('./lib/errors');
-const {Variant} = require('./lib//variant');
-const {Message} = require('./lib/message-type.js');
-const iface = require('./lib/service/interface');
-const createConnection = require('./lib/connection.js');
+const constants = require("./lib/constants")
+const MessageBus = require("./lib/bus")
+const errors = require("./lib/errors")
+const { Variant } = require("./lib//variant")
+const { Message } = require("./lib/message-type.js")
+const iface = require("./lib/service/interface")
+const createConnection = require("./lib/connection.js")
 
-let createClient = function(params) {
-  let connection = createConnection(params || {});
-  return new MessageBus(connection);
-};
+let createClient = function (params) {
+  let connection = createConnection(params || {})
+  return new MessageBus(connection)
+}
 
 /**
  * Create a new {@link MessageBus} client on the DBus system bus to connect to
@@ -20,16 +20,15 @@ let createClient = function(params) {
  * @param {object} [options] - Options for `MessageBus` creation.
  * @param {object} [options.negotiateUnixFd] - Whether this bus should support the negotiation of Unix file descriptors.
  */
-module.exports.systemBus = function(opts) {
-  if(!opts)
-    opts = {};
+module.exports.systemBus = function (opts) {
+  if (!opts) opts = {}
   return createClient({
     negotiateUnixFd: opts.negotiateUnixFd,
     busAddress:
-      process.env.DBUS_SYSTEM_BUS_ADDRESS ||
-      'unix:path=/var/run/dbus/system_bus_socket'
-  });
-};
+      process.env.DBUS_SYSTEM_BUS_ADDRESS
+      || "unix:path=/var/run/dbus/system_bus_socket",
+  })
+}
 
 /**
  * Create a new {@link MessageBus} client on the DBus session bus to connect to
@@ -43,9 +42,9 @@ module.exports.systemBus = function(opts) {
  * `DBUS_SESSION_BUS_ADDRESS` environment variable and when that is not
  * available, found from the `$HOME/.dbus` directory.
  */
-module.exports.sessionBus = function(opts) {
-  return createClient(opts);
-};
+module.exports.sessionBus = function (opts) {
+  return createClient(opts)
+}
 
 /**
  * Use JSBI as a polyfill for long integer types ('x' and 't') in the client
@@ -56,16 +55,17 @@ module.exports.sessionBus = function(opts) {
  * @function
  * @param {boolean} compat - pass `true` to use JSBI.
  */
-module.exports.setBigIntCompat = require('./lib/library-options').setBigIntCompat
+module.exports.setBigIntCompat =
+  require("./lib/library-options").setBigIntCompat
 
-module.exports.NameFlag = constants.NameFlag;
-module.exports.RequestNameReply = constants.RequestNameReply;
-module.exports.ReleaseNameReply = constants.ReleaseNameReply;
-module.exports.MessageType = constants.MessageType;
-module.exports.MessageFlag = constants.MessageFlag;
+module.exports.NameFlag = constants.NameFlag
+module.exports.RequestNameReply = constants.RequestNameReply
+module.exports.ReleaseNameReply = constants.ReleaseNameReply
+module.exports.MessageType = constants.MessageType
+module.exports.MessageFlag = constants.MessageFlag
 
-module.exports.interface = iface;
-module.exports.Variant = Variant;
-module.exports.Message = Message;
-module.exports.validators = require('./lib/validators');
-module.exports.DBusError = errors.DBusError;
+module.exports.interface = iface
+module.exports.Variant = Variant
+module.exports.Message = Message
+module.exports.validators = require("./lib/validators")
+module.exports.DBusError = errors.DBusError

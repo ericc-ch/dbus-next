@@ -1,93 +1,91 @@
-let dbus = require('../../../');
-let Variant = dbus.Variant;
+let dbus = require("../../../")
+let Variant = dbus.Variant
 
 let {
-  Interface, property, method, signal, DBusError,
-  ACCESS_READ, ACCESS_WRITE, ACCESS_READWRITE
-} = dbus.interface;
+  Interface,
+  property,
+  method,
+  signal,
+  DBusError,
+  ACCESS_READ,
+  ACCESS_WRITE,
+  ACCESS_READWRITE,
+} = dbus.interface
 
-let bus = dbus.sessionBus();
+let bus = dbus.sessionBus()
 
 class ExampleInterface extends Interface {
-  @property({signature: 's', access: ACCESS_READWRITE})
-  SimpleProperty = 'foo';
+  @property({ signature: "s", access: ACCESS_READWRITE })
+  SimpleProperty = "foo"
 
   _MapProperty = {
-    'foo': new Variant('s', 'bar'),
-    'bat': new Variant('i', 53)
-  };
+    foo: new Variant("s", "bar"),
+    bat: new Variant("i", 53),
+  }
 
-  @property({signature: 'a{sv}'})
+  @property({ signature: "a{sv}" })
   get MapProperty() {
-    return this._MapProperty;
+    return this._MapProperty
   }
 
   set MapProperty(value) {
-    this._MapProperty = value;
+    this._MapProperty = value
 
     this.PropertiesChanged({
-      MapProperty: value
-    });
+      MapProperty: value,
+    })
   }
 
-  @method({inSignature: 's', outSignature: 's'})
+  @method({ inSignature: "s", outSignature: "s" })
   Echo(what) {
-    return what;
+    return what
   }
 
-  @method({inSignature: 'ss', outSignature: 'vv'})
+  @method({ inSignature: "ss", outSignature: "vv" })
   ReturnsMultiple(what, what2) {
-    return [
-      new Variant('s', what),
-      new Variant('s', what2)
-    ];
+    return [new Variant("s", what), new Variant("s", what2)]
   }
 
-  @method({inSignature: '', outSignature: ''})
+  @method({ inSignature: "", outSignature: "" })
   ThrowsError() {
-    throw new DBusError('org.test.iface.Error', 'something went wrong');
+    throw new DBusError("org.test.iface.Error", "something went wrong")
   }
 
-  @method({inSignature: '', outSignature: '', noReply: true})
-  NoReply() {
+  @method({ inSignature: "", outSignature: "", noReply: true })
+  NoReply() {}
 
-  }
-
-  @signal({signature: 's'})
+  @signal({ signature: "s" })
   HelloWorld(value) {
-    return value;
+    return value
   }
 
-  @signal({signature: 'ss'})
+  @signal({ signature: "ss" })
   SignalMultiple(x) {
-    return [
-      'hello',
-      'world'
-    ];
+    return ["hello", "world"]
   }
 }
 
 class ExampleInterface2 extends Interface {
-  @method({inSignature: '', outSignature: 's'})
+  @method({ inSignature: "", outSignature: "s" })
   SomeMethod() {
-    return 'ok'
+    return "ok"
   }
 }
 
-let example = new ExampleInterface('org.test.iface');
-let example2 = new ExampleInterface2('org.test.iface2');
+let example = new ExampleInterface("org.test.iface")
+let example2 = new ExampleInterface2("org.test.iface2")
 
 setTimeout(() => {
   // emit the HelloWorld signal
-  example.HelloWorld('hello');
-}, 500);
+  example.HelloWorld("hello")
+}, 500)
 
 async function main() {
-  await bus.requestName('org.test.name');
-  bus.export('/org/test/path', example);
-  bus.export('/org/test/path', example2);
+  await bus.requestName("org.test.name")
+  bus.export("/org/test/path", example)
+  bus.export("/org/test/path", example2)
 }
 
 main().catch((err) => {
-  console.log('Error:' + err);
-});
+  console.log("Error:" + err)
+})

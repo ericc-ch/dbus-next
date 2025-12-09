@@ -19,8 +19,8 @@ Desktop users can use this library to create their own scripts and utilities to 
 As of now, dbus-next targets the latest features of JavaScript. The earliest version supported is `6.3.0`. However, the library uses `BigInt` by default for the long integer types which was introduced in `10.8.0`. If you need to support versions earlier than this, set BigInt compatibility mode. This will configure the library to use [JSBI](https://github.com/GoogleChromeLabs/jsbi) as a polyfill for long types.
 
 ```javascript
-const dbus = require('dbus-next');
-dbus.setBigIntCompat(true);
+const dbus = require("dbus-next")
+dbus.setBigIntCompat(true)
 ```
 
 ## The Client Interface
@@ -36,33 +36,43 @@ The interface object is an event emitter that will emit the name of a signal whe
 This is a brief example of using a proxy object with the [MPRIS](https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html) media player interface.
 
 ```js
-let dbus = require('dbus-next');
-let bus = dbus.sessionBus();
-let Variant = dbus.Variant;
+let dbus = require("dbus-next")
+let bus = dbus.sessionBus()
+let Variant = dbus.Variant
 
 // getting an object introspects it on the bus and creates the interfaces
-let obj = await bus.getProxyObject('org.mpris.MediaPlayer2.vlc', '/org/mpris/MediaPlayer2');
+let obj = await bus.getProxyObject(
+  "org.mpris.MediaPlayer2.vlc",
+  "/org/mpris/MediaPlayer2",
+)
 
 // the interfaces are the primary way of interacting with objects on the bus
-let player = obj.getInterface('org.mpris.MediaPlayer2.Player');
-let properties = obj.getInterface('org.freedesktop.DBus.Properties');
+let player = obj.getInterface("org.mpris.MediaPlayer2.Player")
+let properties = obj.getInterface("org.freedesktop.DBus.Properties")
 
 // call methods on the interface
 await player.Play()
 
 // get properties with the properties interface (this returns a variant)
-let volumeVariant = await properties.Get('org.mpris.MediaPlayer2.Player', 'Volume');
-console.log('current volume: ' + volumeVariant.value);
+let volumeVariant = await properties.Get(
+  "org.mpris.MediaPlayer2.Player",
+  "Volume",
+)
+console.log("current volume: " + volumeVariant.value)
 
 // set properties with the properties interface using a variant
-await properties.Set('org.mpris.MediaPlayer2.Player', 'Volume', new Variant('d', volumeVariant.value + 0.05));
+await properties.Set(
+  "org.mpris.MediaPlayer2.Player",
+  "Volume",
+  new Variant("d", volumeVariant.value + 0.05),
+)
 
 // listen to signals
-properties.on('PropertiesChanged', (iface, changed, invalidated) => {
+properties.on("PropertiesChanged", (iface, changed, invalidated) => {
   for (let prop of Object.keys(changed)) {
-    console.log(`property changed: ${prop}`);
+    console.log(`property changed: ${prop}`)
   }
-});
+})
 ```
 
 For a complete example, see the [MPRIS client](https://github.com/dbusjs/node-dbus-next/blob/master/examples/mpris.js) example which can be used to control media players on the command line.
@@ -72,60 +82,55 @@ For a complete example, see the [MPRIS client](https://github.com/dbusjs/node-db
 You can use the `Interface` class to define your interfaces. Use the `configureMembers()` static method to define the DBus methods, properties, and signals for your interface.
 
 ```js
-let dbus = require('dbus-next');
-let Variant = dbus.Variant;
+let dbus = require("dbus-next")
+let Variant = dbus.Variant
 
-let {
-  Interface, DBusError,
-  ACCESS_READ, ACCESS_WRITE, ACCESS_READWRITE
-} = dbus.interface;
+let { Interface, DBusError, ACCESS_READ, ACCESS_WRITE, ACCESS_READWRITE } =
+  dbus.interface
 
-let bus = dbus.sessionBus();
+let bus = dbus.sessionBus()
 
 class ExampleInterface extends Interface {
   constructor() {
-    super('org.test.iface');
-    this._SimpleProperty = 'foo';
+    super("org.test.iface")
+    this._SimpleProperty = "foo"
     this._MapProperty = {
-      'foo': new Variant('s', 'bar'),
-      'bat': new Variant('i', 53)
-    };
+      foo: new Variant("s", "bar"),
+      bat: new Variant("i", 53),
+    }
   }
 
   get SimpleProperty() {
-    return this._SimpleProperty;
+    return this._SimpleProperty
   }
 
   set SimpleProperty(value) {
-    this._SimpleProperty = value;
+    this._SimpleProperty = value
   }
 
   get MapProperty() {
-    return this._MapProperty;
+    return this._MapProperty
   }
 
   set MapProperty(value) {
-    this._MapProperty = value;
+    this._MapProperty = value
 
     Interface.emitPropertiesChanged(this, {
-      MapProperty: value
-    });
+      MapProperty: value,
+    })
   }
 
   Echo(what) {
-    return what;
+    return what
   }
 
   ReturnsMultiple(what, what2) {
-    return [
-      new Variant('s', what),
-      new Variant('s', what2)
-    ];
+    return [new Variant("s", what), new Variant("s", what2)]
   }
 
   ThrowsError() {
     // the error is returned to the client
-    throw new DBusError('org.test.iface.Error', 'something went wrong');
+    throw new DBusError("org.test.iface.Error", "something went wrong")
   }
 
   NoReply() {
@@ -134,74 +139,71 @@ class ExampleInterface extends Interface {
   }
 
   HelloWorld(value) {
-    return value;
+    return value
   }
 
   SignalMultiple(x) {
-    return [
-      'hello',
-      'world'
-    ];
+    return ["hello", "world"]
   }
 }
 
 ExampleInterface.configureMembers({
   properties: {
     SimpleProperty: {
-      signature: 's',
-      access: ACCESS_READWRITE
+      signature: "s",
+      access: ACCESS_READWRITE,
     },
     MapProperty: {
-      signature: 'a{sv}'
-    }
+      signature: "a{sv}",
+    },
   },
   methods: {
     Echo: {
-      inSignature: 's',
-      outSignature: 's'
+      inSignature: "s",
+      outSignature: "s",
     },
     ReturnsMultiple: {
-      inSignature: 'ss',
-      outSignature: 'vv'
+      inSignature: "ss",
+      outSignature: "vv",
     },
     ThrowsError: {
-      inSignature: '',
-      outSignature: ''
+      inSignature: "",
+      outSignature: "",
     },
     NoReply: {
-      inSignature: '',
-      outSignature: '',
-      noReply: true
-    }
+      inSignature: "",
+      outSignature: "",
+      noReply: true,
+    },
   },
   signals: {
     HelloWorld: {
-      signature: 's'
+      signature: "s",
     },
     SignalMultiple: {
-      signature: 'ss'
-    }
-  }
-});
+      signature: "ss",
+    },
+  },
+})
 
-let example = new ExampleInterface();
+let example = new ExampleInterface()
 
 setTimeout(() => {
   // emit the HelloWorld signal by calling the method with the parameters to
   // send to the listeners
-  example.HelloWorld('hello');
-}, 500);
+  example.HelloWorld("hello")
+}, 500)
 
 async function main() {
   // make a request for the name on the bus
-  await bus.requestName('org.test.name');
+  await bus.requestName("org.test.name")
   // export the interface on the path
-  bus.export('/org/test/path', example);
+  bus.export("/org/test/path", example)
 }
 
 main().catch((err) => {
-  console.log('Error: ' + err);
-});
+  console.log("Error: " + err)
+})
 ```
 
 Interfaces extend the `Interface` class. Use `configureMembers()` to declare the DBus signature for your methods, properties, and signals. You can optionally request a name on the bus with `bus.requestName()` so clients have a well-known name to connect to. Then call `bus.export()` with the path and interface to expose this interface on the bus.
@@ -217,38 +219,40 @@ If you have an interface xml description, which can be gotten from the `org.free
 The low-level interface can be used to interact with messages directly. Create new messages with the `Message` class to be sent on the bus as method calls, signals, method returns, or errors. Method calls can be called with the `call()` method of the `MessageBus` to await a reply and `send()` can be use for messages that don't expect a reply.
 
 ```js
-let dbus = require('dbus-next');
-let Message = dbus.Message;
+let dbus = require("dbus-next")
+let Message = dbus.Message
 
-let bus = dbus.sessionBus();
+let bus = dbus.sessionBus()
 
 // send a method call to list the names on the bus
 let methodCall = new Message({
-  destination: 'org.freedesktop.DBus',
-  path: '/org/freedesktop/DBus',
-  interface: 'org.freedesktop.DBus',
-  member: 'ListNames'
-});
+  destination: "org.freedesktop.DBus",
+  path: "/org/freedesktop/DBus",
+  interface: "org.freedesktop.DBus",
+  member: "ListNames",
+})
 
-let reply = await bus.call(methodCall);
-console.log('names on the bus: ', reply.body[0]);
+let reply = await bus.call(methodCall)
+console.log("names on the bus: ", reply.body[0])
 
 // add a custom handler for a particular method
 bus.addMethodHandler((msg) => {
-  if (msg.path === '/org/test/path' &&
-      msg.interface === 'org.test.interface'
-      && msg.member === 'SomeMethod') {
+  if (
+    msg.path === "/org/test/path"
+    && msg.interface === "org.test.interface"
+    && msg.member === "SomeMethod"
+  ) {
     // handle the method by sending a reply
-    let someMethodReply = Message.newMethodReturn(msg, 's', ['hello']);
-    bus.send(someMethodReply);
-    return true;
+    let someMethodReply = Message.newMethodReturn(msg, "s", ["hello"])
+    bus.send(someMethodReply)
+    return true
   }
-});
+})
 
 // listen to any messages that are sent to the bus
-bus.on('message', (msg) => {
-  console.log('got a message: ', msg);
-});
+bus.on("message", (msg) => {
+  console.log("got a message: ", msg)
+})
 ```
 
 For a complete example of how to use the low-level interface to send messages, see the `dbus-next-send.js` script in the `bin` directory.
@@ -260,7 +264,7 @@ Values that are sent or received over the message bus always have an associated 
 Each code in the signature is mapped to a JavaScript type as shown in the table below.
 
 | Name        | Code | JS Type | Notes                                                              |
-|-------------|------|---------|--------------------------------------------------------------------|
+| ----------- | ---- | ------- | ------------------------------------------------------------------ |
 | BYTE        | y    | number  |                                                                    |
 | BOOLEAN     | b    | boolean |                                                                    |
 | INT16       | n    | number  |                                                                    |
@@ -286,7 +290,7 @@ When receiving a file descriptor the application is responsible for closing it.
 The types `a`, `(`, `v`, and `{` are container types that hold other values. Examples of container types and JavaScript examples are in the table below.
 
 | Signature | Example                                | Notes                                                                                                                                     |
-|-----------|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| --------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `(su)`    | `[ 'foo', 5 ]`                         | Each element in the array must match the corresponding type of the struct member.                                                         |
 | `as`      | `[ 'foo', 'bar' ]`                     | The child type comes immediately after the `a`. The array can have any number of elements, but they all must match the child type.        |
 | `a{su}`   | `{ 'foo': 5 }`                         | An "array of dict entries" is represented by an Object. The type after `{` is the key type and the type before the `}` is the value type. |

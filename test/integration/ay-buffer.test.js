@@ -1,91 +1,89 @@
-const dbus = require('../../');
+const dbus = require("../../")
 
-const Variant = dbus.Variant;
-const {
-  Interface
-} = dbus.interface;
+const Variant = dbus.Variant
+const { Interface } = dbus.interface
 
-const bus = dbus.sessionBus();
-bus.on('error', (err) => {
-  console.log(`got unexpected connection error:\n${err.stack}`);
-});
+const bus = dbus.sessionBus()
+bus.on("error", (err) => {
+  console.log(`got unexpected connection error:\n${err.stack}`)
+})
 
 beforeAll(async () => {
-  await bus.requestName(TEST_NAME);
-  bus.export(TEST_PATH, testIface);
-});
+  await bus.requestName(TEST_NAME)
+  bus.export(TEST_PATH, testIface)
+})
 
 afterAll(() => {
-  bus.disconnect();
-});
+  bus.disconnect()
+})
 
-const TEST_NAME = 'org.test.aybuffer';
-const TEST_PATH = '/org/test/path';
-const TEST_IFACE = 'org.test.iface';
+const TEST_NAME = "org.test.aybuffer"
+const TEST_PATH = "/org/test/path"
+const TEST_IFACE = "org.test.iface"
 
 class AyBufferInterface extends Interface {
-  EchoBuffer (what) {
-    expect(what).toEqual(expect.any(Buffer));
-    return what;
+  EchoBuffer(what) {
+    expect(what).toEqual(expect.any(Buffer))
+    return what
   }
 
-  EchoAay (what) {
-    expect(what).toEqual(expect.any(Array));
+  EchoAay(what) {
+    expect(what).toEqual(expect.any(Array))
     for (const buf of what) {
-      expect(buf).toEqual(expect.any(Buffer));
+      expect(buf).toEqual(expect.any(Buffer))
     }
-    return what;
+    return what
   }
 
-  EchoAyVariant (what) {
-    expect(what.signature).toEqual('ay');
-    expect(what.value).toEqual(expect.any(Buffer));
-    return what;
+  EchoAyVariant(what) {
+    expect(what.signature).toEqual("ay")
+    expect(what.value).toEqual(expect.any(Buffer))
+    return what
   }
 }
 
 AyBufferInterface.configureMembers({
   methods: {
-    EchoBuffer: { inSignature: 'ay', outSignature: 'ay' },
-    EchoAay: { inSignature: 'aay', outSignature: 'aay' },
-    EchoAyVariant: { inSignature: 'v', outSignature: 'v' }
-  }
-});
+    EchoBuffer: { inSignature: "ay", outSignature: "ay" },
+    EchoAay: { inSignature: "aay", outSignature: "aay" },
+    EchoAyVariant: { inSignature: "v", outSignature: "v" },
+  },
+})
 
-const testIface = new AyBufferInterface(TEST_IFACE);
+const testIface = new AyBufferInterface(TEST_IFACE)
 
-test('dbus type ay should be a buffer', async () => {
-  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
-  const test = object.getInterface(TEST_IFACE);
+test("dbus type ay should be a buffer", async () => {
+  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH)
+  const test = object.getInterface(TEST_IFACE)
 
-  const ayArray = [1, 2, 3];
-  const buf = Buffer.from(ayArray);
-  let result = await test.EchoBuffer(buf);
-  expect(result).toEqual(buf);
+  const ayArray = [1, 2, 3]
+  const buf = Buffer.from(ayArray)
+  let result = await test.EchoBuffer(buf)
+  expect(result).toEqual(buf)
 
   // it should work with arrays to for compatibility with earlier versions
-  result = await test.EchoBuffer(ayArray);
-  expect(result).toEqual(buf);
+  result = await test.EchoBuffer(ayArray)
+  expect(result).toEqual(buf)
 
   // regression #57
-  const ayArray2 = [4, 5, 6];
-  const buf2 = Buffer.from(ayArray2);
+  const ayArray2 = [4, 5, 6]
+  const buf2 = Buffer.from(ayArray2)
 
-  const bufArray = [buf, buf2];
-  result = await test.EchoAay(bufArray);
-  expect(result).toEqual(bufArray);
+  const bufArray = [buf, buf2]
+  result = await test.EchoAay(bufArray)
+  expect(result).toEqual(bufArray)
 
   // compat with earlier versions
-  const aayBufArray = [ayArray, ayArray2];
-  result = await test.EchoAay(aayBufArray);
-  expect(result).toEqual(bufArray);
+  const aayBufArray = [ayArray, ayArray2]
+  result = await test.EchoAay(aayBufArray)
+  expect(result).toEqual(bufArray)
 
   // make sure it works with variants
-  const bufVariant = new Variant('ay', buf);
-  result = await test.EchoAyVariant(bufVariant);
-  expect(result).toEqual(bufVariant);
+  const bufVariant = new Variant("ay", buf)
+  result = await test.EchoAyVariant(bufVariant)
+  expect(result).toEqual(bufVariant)
 
-  const arrayBufVariant = new Variant('ay', ayArray);
-  result = await test.EchoAyVariant(arrayBufVariant);
-  expect(result).toEqual(new Variant('ay', buf));
-});
+  const arrayBufVariant = new Variant("ay", ayArray)
+  result = await test.EchoAyVariant(arrayBufVariant)
+  expect(result).toEqual(new Variant("ay", buf))
+})

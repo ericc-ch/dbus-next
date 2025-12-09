@@ -1,18 +1,16 @@
 // Test that signals emit correctly
 
-const dbus = require('../../');
-const { waitForMessage } = require('../util');
+const dbus = require("../../")
+const { waitForMessage } = require("../util")
 
-const Variant = dbus.Variant;
+const Variant = dbus.Variant
 
-const {
-  Interface
-} = dbus.interface;
+const { Interface } = dbus.interface
 
-const TEST_NAME = 'org.test.signals';
-const TEST_NAME2 = 'org.test.signals_name2';
-const TEST_PATH = '/org/test/path';
-const TEST_IFACE = 'org.test.iface';
+const TEST_NAME = "org.test.signals"
+const TEST_NAME2 = "org.test.signals_name2"
+const TEST_PATH = "/org/test/path"
+const TEST_IFACE = "org.test.iface"
 const TEST_XML = `
 <!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node>
@@ -62,138 +60,130 @@ const TEST_XML = `
     </signal>
   </interface>
 </node>
-`;
+`
 
-const bus = dbus.sessionBus();
-bus.on('error', (err) => {
-  console.log(`got unexpected connection error:\n${err.stack}`);
-});
-const bus2 = dbus.sessionBus();
-bus2.on('error', (err) => {
-  console.log(`got unexpected connection error:\n${err.stack}`);
-});
+const bus = dbus.sessionBus()
+bus.on("error", (err) => {
+  console.log(`got unexpected connection error:\n${err.stack}`)
+})
+const bus2 = dbus.sessionBus()
+bus2.on("error", (err) => {
+  console.log(`got unexpected connection error:\n${err.stack}`)
+})
 
 class SignalsInterface extends Interface {
-  HelloWorld (value) {
-    return value;
+  HelloWorld(value) {
+    return value
   }
 
-  SignalMultiple () {
-    return [
-      'hello',
-      'world'
-    ];
+  SignalMultiple() {
+    return ["hello", "world"]
   }
 
   // a really complicated variant
-  complicated = new Variant('a{sv}', {
-    foo: new Variant('s', 'bar'),
-    bar: new Variant('d', 53),
-    bat: new Variant('v', new Variant('as', ['foo', 'bar', 'bat'])),
-    baz: new Variant('(doodoo)', [1, '/', '/', 1, '/', '/']),
-    fiz: new Variant('(as(s(v)))', [
-      ['one', 'two'],
-      ['three', [
-        new Variant('as', ['four', 'five'])]
-      ]
+  complicated = new Variant("a{sv}", {
+    foo: new Variant("s", "bar"),
+    bar: new Variant("d", 53),
+    bat: new Variant("v", new Variant("as", ["foo", "bar", "bat"])),
+    baz: new Variant("(doodoo)", [1, "/", "/", 1, "/", "/"]),
+    fiz: new Variant("(as(s(v)))", [
+      ["one", "two"],
+      ["three", [new Variant("as", ["four", "five"])]],
     ]),
-    buz: new Variant('av', [
-      new Variant('as', ['foo']),
-      new Variant('a{ss}', { foo: 'bar' }),
-      new Variant('v', new Variant('(asas)', [['bar'], ['foo']])),
-      new Variant('v', new Variant('v', new Variant('as', ['one', 'two']))),
-      new Variant('a{ss}', { foo: 'bar' })
-    ])
-  });
+    buz: new Variant("av", [
+      new Variant("as", ["foo"]),
+      new Variant("a{ss}", { foo: "bar" }),
+      new Variant("v", new Variant("(asas)", [["bar"], ["foo"]])),
+      new Variant("v", new Variant("v", new Variant("as", ["one", "two"]))),
+      new Variant("a{ss}", { foo: "bar" }),
+    ]),
+  })
 
-  SignalComplicated () {
-    return this.complicated;
+  SignalComplicated() {
+    return this.complicated
   }
 
-  EmitSignals () {
-    this.HelloWorld('hello');
-    this.SignalMultiple();
-    this.SignalComplicated();
+  EmitSignals() {
+    this.HelloWorld("hello")
+    this.SignalMultiple()
+    this.SignalComplicated()
   }
 }
 
 SignalsInterface.configureMembers({
   methods: {
-    EmitSignals: { inSignature: '', outSignature: '' }
+    EmitSignals: { inSignature: "", outSignature: "" },
   },
   signals: {
-    HelloWorld: { signature: 's' },
-    SignalMultiple: { signature: 'ss' },
-    SignalComplicated: { signature: 'v' }
-  }
-});
+    HelloWorld: { signature: "s" },
+    SignalMultiple: { signature: "ss" },
+    SignalComplicated: { signature: "v" },
+  },
+})
 
-const testIface = new SignalsInterface(TEST_IFACE);
-const testIface2 = new SignalsInterface(TEST_IFACE);
+const testIface = new SignalsInterface(TEST_IFACE)
+const testIface2 = new SignalsInterface(TEST_IFACE)
 
 async function createTestService(name) {
-  const testBus = dbus.sessionBus();
-  const testIface = new SignalsInterface(TEST_IFACE);
+  const testBus = dbus.sessionBus()
+  const testIface = new SignalsInterface(TEST_IFACE)
 
-  await testBus.requestName(name);
-  testBus.export(TEST_PATH, testIface);
+  await testBus.requestName(name)
+  testBus.export(TEST_PATH, testIface)
 
-  return [testBus, testIface];
+  return [testBus, testIface]
 }
 
 beforeAll(async () => {
-  await Promise.all([
-    bus.requestName(TEST_NAME),
-    bus2.requestName(TEST_NAME2)
-  ]);
-  bus.export(TEST_PATH, testIface);
-  bus2.export(TEST_PATH, testIface2);
-});
+  await Promise.all([bus.requestName(TEST_NAME), bus2.requestName(TEST_NAME2)])
+  bus.export(TEST_PATH, testIface)
+  bus2.export(TEST_PATH, testIface2)
+})
 
 afterAll(() => {
-  bus.disconnect();
-  bus2.disconnect();
-});
+  bus.disconnect()
+  bus2.disconnect()
+})
 
-test('test that signals work correctly', async () => {
-  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
-  const test = object.getInterface(TEST_IFACE);
+test("test that signals work correctly", async () => {
+  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH)
+  const test = object.getInterface(TEST_IFACE)
 
-  const onHelloWorld = jest.fn();
-  const onSignalMultiple = jest.fn();
-  const onSignalMultiple2 = jest.fn();
-  const onSignalComplicated = jest.fn();
+  const onHelloWorld = jest.fn()
+  const onSignalMultiple = jest.fn()
+  const onSignalMultiple2 = jest.fn()
+  const onSignalComplicated = jest.fn()
 
-  test.once('HelloWorld', onHelloWorld);
-  test.on('SignalMultiple', onSignalMultiple);
-  test.on('SignalMultiple', onSignalMultiple2);
-  test.on('SignalComplicated', onSignalComplicated);
+  test.once("HelloWorld", onHelloWorld)
+  test.on("SignalMultiple", onSignalMultiple)
+  test.on("SignalMultiple", onSignalMultiple2)
+  test.on("SignalComplicated", onSignalComplicated)
 
-  await test.EmitSignals();
+  await test.EmitSignals()
 
-  expect(onHelloWorld).toHaveBeenCalledWith('hello');
-  expect(onSignalMultiple).toHaveBeenCalledWith('hello', 'world');
-  expect(onSignalMultiple2).toHaveBeenCalledWith('hello', 'world');
-  expect(onSignalComplicated).toHaveBeenCalledWith(testIface.complicated);
+  expect(onHelloWorld).toHaveBeenCalledWith("hello")
+  expect(onSignalMultiple).toHaveBeenCalledWith("hello", "world")
+  expect(onSignalMultiple2).toHaveBeenCalledWith("hello", "world")
+  expect(onSignalComplicated).toHaveBeenCalledWith(testIface.complicated)
 
   // removing the event listener on the interface should remove the event
   // listener on the bus as well
-  expect(bus._signals.eventNames().length).toEqual(2);
-  test.removeListener('SignalMultiple', onSignalMultiple);
-  expect(bus._signals.eventNames().length).toEqual(2);
+  expect(bus._signals.eventNames().length).toEqual(2)
+  test.removeListener("SignalMultiple", onSignalMultiple)
+  expect(bus._signals.eventNames().length).toEqual(2)
 
   // removing the listener on a signal should not remove them all
-  onSignalMultiple2.mockClear();
-  await test.EmitSignals();
-  expect(onSignalMultiple2).toHaveBeenCalledWith('hello', 'world');
+  onSignalMultiple2.mockClear()
+  await test.EmitSignals()
+  expect(onSignalMultiple2).toHaveBeenCalledWith("hello", "world")
 
-  test.removeListener('SignalMultiple', onSignalMultiple2);
-  expect(bus._signals.eventNames().length).toEqual(1);
-  test.removeListener('SignalComplicated', onSignalComplicated);
-  expect(bus._signals.eventNames().length).toEqual(0);
-});
+  test.removeListener("SignalMultiple", onSignalMultiple2)
+  expect(bus._signals.eventNames().length).toEqual(1)
+  test.removeListener("SignalComplicated", onSignalComplicated)
+  expect(bus._signals.eventNames().length).toEqual(0)
+})
 
-test('signals dont get mixed up between names that define objects on the same path and interface', async () => {
+test("signals dont get mixed up between names that define objects on the same path and interface", async () => {
   // Note that there is a really bad case where a single connection takes two
   // names and exports the same interfaces and paths on them. Then there is no
   // way to tell the signals apart from the names because the messages look
@@ -201,139 +191,145 @@ test('signals dont get mixed up between names that define objects on the same pa
   // well known name, and the well known name is what will be different. For
   // this reason, I am going to recommend that people only use one name per bus
   // connection until we can figure that out.
-  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
-  const object2 = await bus.getProxyObject(TEST_NAME2, TEST_PATH);
+  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH)
+  const object2 = await bus.getProxyObject(TEST_NAME2, TEST_PATH)
 
-  const test = object.getInterface(TEST_IFACE);
-  const test2 = object2.getInterface(TEST_IFACE);
+  const test = object.getInterface(TEST_IFACE)
+  const test2 = object2.getInterface(TEST_IFACE)
 
-  const cb = jest.fn();
-  const cb2 = jest.fn();
+  const cb = jest.fn()
+  const cb2 = jest.fn()
 
-  test.on('HelloWorld', cb);
-  test.on('SignalMultiple', cb);
-  test.on('SignalComplicated', cb);
+  test.on("HelloWorld", cb)
+  test.on("SignalMultiple", cb)
+  test.on("SignalComplicated", cb)
 
-  test2.on('HelloWorld', cb2);
-  test2.on('SignalMultiple', cb2);
-  test2.on('SignalComplicated', cb2);
+  test2.on("HelloWorld", cb2)
+  test2.on("SignalMultiple", cb2)
+  test2.on("SignalComplicated", cb2)
 
-  await test.EmitSignals();
+  await test.EmitSignals()
 
-  expect(cb).toHaveBeenCalledTimes(3);
-  expect(cb2).toHaveBeenCalledTimes(0);
-});
+  expect(cb).toHaveBeenCalledTimes(3)
+  expect(cb2).toHaveBeenCalledTimes(0)
+})
 
-test('regression #64: adding multiple listeners to a signal', async () => {
-  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH);
-  const test = object.getInterface(TEST_IFACE);
+test("regression #64: adding multiple listeners to a signal", async () => {
+  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH)
+  const test = object.getInterface(TEST_IFACE)
 
-  const cb = jest.fn();
-  const cb2 = jest.fn();
-  const cb3 = jest.fn();
+  const cb = jest.fn()
+  const cb2 = jest.fn()
+  const cb3 = jest.fn()
 
-  test.on('HelloWorld', cb);
-  test.on('HelloWorld', cb2);
-  test.on('HelloWorld', cb3);
+  test.on("HelloWorld", cb)
+  test.on("HelloWorld", cb2)
+  test.on("HelloWorld", cb3)
 
-  await test.EmitSignals();
+  await test.EmitSignals()
 
-  expect(cb).toHaveBeenCalledTimes(1);
-  expect(cb2).toHaveBeenCalledTimes(1);
-  expect(cb3).toHaveBeenCalledTimes(1);
+  expect(cb).toHaveBeenCalledTimes(1)
+  expect(cb2).toHaveBeenCalledTimes(1)
+  expect(cb3).toHaveBeenCalledTimes(1)
 
-  test.removeListener('HelloWorld', cb);
-  test.removeListener('HelloWorld', cb2);
+  test.removeListener("HelloWorld", cb)
+  test.removeListener("HelloWorld", cb2)
 
-  await test.EmitSignals();
+  await test.EmitSignals()
 
-  expect(cb).toHaveBeenCalledTimes(1);
-  expect(cb2).toHaveBeenCalledTimes(1);
-  expect(cb3).toHaveBeenCalledTimes(2);
+  expect(cb).toHaveBeenCalledTimes(1)
+  expect(cb2).toHaveBeenCalledTimes(1)
+  expect(cb3).toHaveBeenCalledTimes(2)
 
-  test.removeListener('HelloWorld', cb3);
+  test.removeListener("HelloWorld", cb3)
 
-  await test.EmitSignals();
+  await test.EmitSignals()
 
-  expect(cb).toHaveBeenCalledTimes(1);
-  expect(cb2).toHaveBeenCalledTimes(1);
-  expect(cb3).toHaveBeenCalledTimes(2);
-});
+  expect(cb).toHaveBeenCalledTimes(1)
+  expect(cb2).toHaveBeenCalledTimes(1)
+  expect(cb3).toHaveBeenCalledTimes(2)
+})
 
-test('bug #86: signals dont get lost when no previous method calls have been made', async () => {
+test("bug #86: signals dont get lost when no previous method calls have been made", async () => {
   // clear the name owners cache from previous tests
-  bus._nameOwners = {};
+  bus._nameOwners = {}
 
   // when providing XML data, no introspection call is made
-  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH, TEST_XML);
-  const test = object.getInterface(TEST_IFACE);
-  const cb = jest.fn();
+  const object = await bus.getProxyObject(TEST_NAME, TEST_PATH, TEST_XML)
+  const test = object.getInterface(TEST_IFACE)
+  const cb = jest.fn()
 
-  test.on('HelloWorld', cb);
-  test.on('SignalMultiple', cb);
-  test.on('SignalComplicated', cb);
+  test.on("HelloWorld", cb)
+  test.on("SignalMultiple", cb)
+  test.on("SignalComplicated", cb)
 
   // don't call EmitSignals through the proxy object
-  testIface.EmitSignals();
+  testIface.EmitSignals()
 
   // allow signal handlers to run (needs more time in bun)
-  await new Promise(resolve => { setTimeout(resolve, 50); });
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50)
+  })
 
-  expect(cb).toHaveBeenCalledTimes(3);
-});
+  expect(cb).toHaveBeenCalledTimes(3)
+})
 
-test('client continues receive signals from restarted DBus service', async () => {
-  const clientBus = dbus.sessionBus();
+test("client continues receive signals from restarted DBus service", async () => {
+  const clientBus = dbus.sessionBus()
 
-  const testServiceName = 'local.test.signals';
-  let [testBus] = await createTestService(testServiceName);
+  const testServiceName = "local.test.signals"
+  let [testBus] = await createTestService(testServiceName)
 
-  const object = await clientBus.getProxyObject(testServiceName, TEST_PATH);
-  const test = object.getInterface(TEST_IFACE);
-  const cb = jest.fn();
+  const object = await clientBus.getProxyObject(testServiceName, TEST_PATH)
+  const test = object.getInterface(TEST_IFACE)
+  const cb = jest.fn()
 
-  expect(clientBus._nameOwners[testServiceName]).toEqual(testBus.name);
+  expect(clientBus._nameOwners[testServiceName]).toEqual(testBus.name)
 
-  test.on('HelloWorld', cb);
-  test.on('SignalMultiple', cb);
-  test.on('SignalComplicated', cb);
+  test.on("HelloWorld", cb)
+  test.on("SignalMultiple", cb)
+  test.on("SignalComplicated", cb)
 
-  await test.EmitSignals();
+  await test.EmitSignals()
 
-  expect(cb).toHaveBeenCalledTimes(3);
+  expect(cb).toHaveBeenCalledTimes(3)
 
   // Set up listener before disconnecting to avoid race condition
-  const waitForDisconnect = waitForMessage(clientBus, { member: 'NameOwnerChanged' });
+  const waitForDisconnect = waitForMessage(clientBus, {
+    member: "NameOwnerChanged",
+  })
 
-  await testBus.releaseName(testServiceName);
-  testBus.disconnect();
+  await testBus.releaseName(testServiceName)
+  testBus.disconnect()
 
-  await waitForDisconnect;
-  expect(clientBus._nameOwners[testServiceName]).toEqual('');
-
-  [testBus] = await createTestService(testServiceName);
+  await waitForDisconnect
+  expect(clientBus._nameOwners[testServiceName]).toEqual("")
+  ;[testBus] = await createTestService(testServiceName)
 
   // Wait for the name owner to be updated by polling
   // This is more reliable than waiting for signals which can have race conditions
   await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Timeout waiting for name owner update')), 5000);
+    const timeout = setTimeout(
+      () => reject(new Error("Timeout waiting for name owner update")),
+      5000,
+    )
     const check = () => {
       if (clientBus._nameOwners[testServiceName] === testBus.name) {
-        clearTimeout(timeout);
-        resolve();
+        clearTimeout(timeout)
+        resolve()
       } else {
-        setTimeout(check, 10);
+        setTimeout(check, 10)
       }
-    };
-    check();
-  });
+    }
+    check()
+  })
 
-  expect(clientBus._nameOwners[testServiceName]).toEqual(testBus.name);
+  expect(clientBus._nameOwners[testServiceName]).toEqual(testBus.name)
 
-  await test.EmitSignals();
+  await test.EmitSignals()
 
-  expect(cb).toHaveBeenCalledTimes(6);
+  expect(cb).toHaveBeenCalledTimes(6)
 
-  clientBus.disconnect();
-  testBus.disconnect();
-});
+  clientBus.disconnect()
+  testBus.disconnect()
+})
