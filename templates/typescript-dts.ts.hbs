@@ -16,7 +16,7 @@ export interface {{className $.name}} extends DBus.ClientInterface {
     /***** Properties *****/
 
     {{#each property}}
-    //@property({ name: '{{$.name}}', signature: '{{$.type}}', access: {{accessConst $.access}} })
+    // property: {{$.name}} { signature: '{{$.type}}', access: {{accessConst $.access}} }
     {{#canRead $.access}}{{$.name}}(): Promise<{{tsType $.type}}>;{{/canRead}}{{#canWrite $.access}}
     {{$.name}}(value: {{tsType $.type}}): Promise<void>;{{/canWrite}}
 
@@ -25,7 +25,7 @@ export interface {{className $.name}} extends DBus.ClientInterface {
     /***** Methods *****/
 
     {{#each method}}
-    //@method({ name: '{{$.name}}', inSignature: '{{inSignature arg}}', outSignature: '{{outSignature arg}}' })
+    // method: {{$.name}} { inSignature: '{{inSignature arg}}', outSignature: '{{outSignature arg}}' }
     {{$.name}}({{#each arg}}{{#ifeq $.direction "in"}}{{$.name}}: {{tsType $.type}}{{#unless @last}}, {{/unless}}{{/ifeq}}{{/each}}): Promise<{{outType arg}}>;
 
     {{/each}}
@@ -33,7 +33,7 @@ export interface {{className $.name}} extends DBus.ClientInterface {
     /***** Signals *****/
 
     {{#each signal}}
-    //@signal({ name: '{{$.name}}', signature: '{{signature arg}}' })
+    // signal: {{$.name}} { signature: '{{signature arg}}' }
     on(evt: "{{$.name}}", cb: ({{#each arg}}{{$.name}}: {{tsType $.type}}{{#unless @last}}, {{/unless}}{{/each}}) => void): this;
     {{/each}}
 }

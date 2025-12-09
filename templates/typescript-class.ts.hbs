@@ -73,7 +73,7 @@ export class {{className $.name}} extends EventEmitter {
     }
 
     {{#each property}}
-    //@property({ name: '{{$.name}}', signature: '{{$.type}}', access: {{accessConst $.access}} }){{#ifeq $.access "read"}}
+    // property: {{$.name}} { signature: '{{$.type}}', access: {{accessConst $.access}} }{{#ifeq $.access "read"}}
     public {{$.name}}(): Promise<{{tsType $.type}}> {
         return this.propertiesDBusInterface.Get(this.dbusInterfaceName, '{{$.name}}'){{#unlesseq $.type "v"}}.then((variant: DBus.Variant) => variant.value){{/unlesseq}};
     }{{/ifeq}}{{#ifeq $.access "write"}}
@@ -95,7 +95,7 @@ export class {{className $.name}} extends EventEmitter {
     /***** Methods *****/
 
     {{#each method}}
-    //@method({ name: '{{$.name}}', inSignature: '{{inSignature arg}}', outSignature: '{{outSignature arg}}' })
+    // method: {{$.name}} { inSignature: '{{inSignature arg}}', outSignature: '{{outSignature arg}}' }
     public {{$.name}}({{#each arg}}{{#ifeq $.direction "in"}}{{$.name}}: {{tsType $.type}}{{#unless @last}}, {{/unless}}{{/ifeq}}{{/each}}): Promise<{{outType arg}}> {
         return this.thisDBusInterface.{{$.name}}({{#each arg}}{{#ifeq $.direction "in"}}{{$.name}}{{#unless @last}}, {{/unless}}{{/ifeq}}{{/each}});
     }
@@ -106,7 +106,7 @@ export class {{className $.name}} extends EventEmitter {
 /***** Signals for {{$.name}} *****/
 export declare interface {{className $.name}} {
     {{#each signal}}
-    //@signal({ name: '{{$.name}}', signature: '{{signature arg}}' })
+    // signal: {{$.name}} { signature: '{{signature arg}}' }
     on(evt: "{{$.name}}", cb: ({{#each arg}}{{$.name}}: {{tsType $.type}}{{#unless @last}}, {{/unless}}{{/each}}) => void): this;
     {{/each}}
     {{#if property}}on(evt: "PropertiesChanged", cb: (iface: string, changedProperties: {[key:string]: any}, invalidatedProperties: string[]) => void): this;{{/if}}
