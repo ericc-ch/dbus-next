@@ -1,6 +1,7 @@
 {
   "name": "dbus-next",
   "version": "0.10.2",
+  "description": "The next great DBus library for Node",
   "keywords": [
     "dbus",
     "dcop",
@@ -9,62 +10,49 @@
     "gnome",
     "kde"
   ],
-  "description": "The next great DBus library for Node",
-  "files": [
-    "lib/*",
-    "index.js",
-    "package.json",
-    "types.d.ts"
-  ],
-  "directories": {
-    "lib": "lib",
-    "test": "test",
-    "examples": "examples"
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/dbusjs/node-dbus-next.git"
   },
-  "main": "index.js",
-  "types": "types.d.ts",
+  "license": "MIT",
   "maintainers": [
     {
       "name": "Tony Crisci",
       "email": "tony@dubstepdish.com"
     }
   ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/dbusjs/node-dbus-next.git"
+  "main": "index.js",
+  "types": "types.d.ts",
+  "directories": {
+    "lib": "lib",
+    "test": "test",
+    "examples": "examples"
+  },
+  "files": [
+    "lib/*",
+    "index.js",
+    "package.json",
+    "types.d.ts"
+  ],
+  "scripts": {
+    "lint": "oxlint",
+    "format": "prettier --write .",
+    "test": "dbus-run-session -- bun test"
   },
   "dependencies": {
+    "@nornagon/put": "0.0.8",
     "event-stream": "3.3.4",
     "jsbi": "^2.0.5",
     "long": "^4.0.0",
-    "@nornagon/put": "0.0.8",
     "safe-buffer": "^5.1.1",
-    "xml2js": "^0.4.17"
-  },
-  "optionalDependencies": {
+    "xml2js": "^0.4.17",
     "usocket": "^1.0.1"
   },
   "devDependencies": {
+    "@types/bun": "^1.3.4",
     "commander": "^2.19.0",
     "handlebars": "^4.1.0",
-    "jest": "^24.1.0",
-    "jsdoc": "^3.6.3",
-    "semistandard": "^16.0.0"
-  },
-  "scripts": {
-    "integration": "dbus-run-session -- bun test ./test/integration",
-    "coverage": "dbus-run-session -- bun test --coverage",
-    "unit": "bun test ./test/*.test.js",
-    "test": "dbus-run-session -- bun test",
-    "doc": "jsdoc --verbose -c jsdoc.conf --readme README.md -r lib index.js -d doc",
-    "format": "cd lib && semistandard --global BigInt --fix && cd ../test && semistandard --env jest --global BigInt --fix"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "bail": true
-  },
-  "engine": {
-    "node": ">=6.3.0"
+    "oxlint": "^1.32.0",
+    "prettier": "^3.7.4"
   }
 }
